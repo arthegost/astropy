@@ -108,6 +108,6 @@ def test_too_long_comment(recwarn):
 |long|
 |    |
 |null|
-    3
+    3 
 """
     assert out.getvalue().splitlines() == expected_out.splitlines()
