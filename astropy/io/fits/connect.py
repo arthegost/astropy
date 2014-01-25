@@ -14,6 +14,7 @@ from .. import registry as io_registry
 from ...table import Table
 from ... import log
 from ... import units as u
+from ...units.format.fits import FitsScaleError
 
 from . import HDUList, TableHDU, BinTableHDU, GroupsHDU
 from .hdu.hdulist import fitsopen as fits_open
@@ -237,7 +238,12 @@ def write_table_fits(input, output, overwrite=False):
     # Set units for output HDU
     for col in table_hdu.columns:
         if input[col.name].unit is not None:
-            col.unit = input[col.name].unit.to_string(format='fits')
+            try:
+                col.unit = input[col.name].unit.to_string(format='fits')
+            except FitsScaleError as error:
+                # If units has a scale and cannot be supported with FITS, raise
+                # an exception with useful information about the col.name, unit, and original error.
+                raise FitsScaleError('Improved Error message!!!')
 
     for key, value in input.meta.items():
 
