@@ -51,3 +51,11 @@ htmlcov
 
 # Mac OSX
 .DS_Store
+
+coverage.txt
+
+file_coverage.txt
+
+func_coverage.txt
+
+subpack_coverage.txt
