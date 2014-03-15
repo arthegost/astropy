@@ -41,6 +41,10 @@ New Features
   - A new ``csv`` format was added as a convenience for handling CSV (comma-
     separated values) data. [#1935]
 
+  - Added an HTML reader and writer to the ``astropy.io.ascii`` package.
+    Parsing requires the installation of BeautifulSoup and is therefore
+    an optional feature. [#2160]
+
 - ``astropy.io.fits``
 
 - ``astropy.io.misc``
