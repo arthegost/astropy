@@ -20,8 +20,7 @@ from ..time import Time
 from .angles import Angle
 from .representation import SphericalRepresentation
 from .baseframe import BaseCoordinateFrame, frame_transform_graph, GenericFrame
-from .transformations import StaticMatrixTransform, FunctionTransform, \
-                             DynamicMatrixTransform
+from .transformations import FunctionTransform, DynamicMatrixTransform
 
 
 __all__ = ['ICRS', 'FK5', 'FK4', 'FK4NoETerms', 'Galactic', 'AltAz']
@@ -48,14 +47,14 @@ class ICRS(BaseCoordinateFrame):
     representation : `BaseRepresentation` or None
         A representation object or None to have no data (or use the other keywords)
     ra : `Angle`, optional, must be keyword
-        The RA for this object (`dec` must also be given and `representation`
+        The RA for this object (``dec`` must also be given and ``representation``
         must be None).
     dec : `Angle`, optional, must be keyword
-        The Declination for this object (`ra` must also be given and
-        `representation` must be None).
-    distance : `Quantity`, optional, must be keyword
+        The Declination for this object (``ra`` must also be given and
+        ``representation`` must be None).
+    distance : `~astropy.units.Quantity`, optional, must be keyword
         The Distance for this object along the line-of-sight.
-        (`representation` must be None).
+        (``representation`` must be None).
     """
 
     preferred_representation = SphericalRepresentation
@@ -81,6 +80,7 @@ class ICRS(BaseCoordinateFrame):
         m3 = rotation_matrix(da0, 'z')
 
         return m1 * m2 * m3
+
 # define this because it only needs to be computed once
 ICRS._ICRS_TO_FK5_J2000_MAT = ICRS._icrs_to_fk5_matrix()
 
@@ -95,15 +95,15 @@ class FK5(BaseCoordinateFrame):
     representation : `BaseRepresentation` or None
         A representation object or None to have no data (or use the other keywords)
     ra : `Angle`, optional, must be keyword
-        The RA for this object (`dec` must also be given and `representation`
+        The RA for this object (``dec`` must also be given and ``representation``
         must be None).
     dec : `Angle`, optional, must be keyword
-        The Declination for this object (`ra` must also be given and
-        `representation` must be None).
-    distance : `Quantity`, optional, must be keyword
+        The Declination for this object (``ra`` must also be given and
+        ``representation`` must be None).
+    distance : `~astropy.units.Quantity`, optional, must be keyword
         The Distance for this object along the line-of-sight.
-        (`representation` must be None).
-    equinox : astropy.time.Time, optional, must be keyword
+        (``representation`` must be None).
+    equinox : `~astropy.time.Time`, optional, must be keyword
         The equinox of this frame.
     """
 
@@ -152,19 +152,19 @@ class FK4(BaseCoordinateFrame):
     representation : `BaseRepresentation` or None
         A representation object or None to have no data (or use the other keywords)
     ra : `Angle`, optional, must be keyword
-        The RA for this object (`dec` must also be given and `representation`
+        The RA for this object (``dec`` must also be given and ``representation``
         must be None).
     dec : `Angle`, optional, must be keyword
-        The Declination for this object (`ra` must also be given and
-        `representation` must be None).
+        The Declination for this object (``ra`` must also be given and
+        ``representation`` must be None).
     distance : `Quantity`, optional, must be keyword
         The Distance for this object along the line-of-sight.
-        (`representation` must be None).
+        (``representation`` must be None).
     equinox : astropy.time.Time, optional, must be keyword
         The equinox of this frame.
     obstime : astropy.time.Time, optional, must be keyword
         The time this frame was observed.  If None, will be the same as
-        `equinox`.
+        ``equinox``.
     """
 
     preferred_representation = SphericalRepresentation
@@ -201,17 +201,17 @@ class FK4NoETerms(BaseCoordinateFrame):
     representation : `BaseRepresentation` or None
         A representation object or None to have no data (or use the other keywords)
     ra : `Angle`, optional, must be keyword
-        The RA for this object (`dec` must also be given and `representation`
+        The RA for this object (``dec`` must also be given and ``representation``
         must be None).
     dec : `Angle`, optional, must be keyword
-        The Declination for this object (`ra` must also be given and
-        `representation` must be None).
+        The Declination for this object (``ra`` must also be given and
+        ``representation`` must be None).
     distance : `Quantity`, optional, must be keyword
         The Distance for this object along the line-of-sight.
-        (`representation` must be None).
+        (``representation`` must be None).
     obstime : astropy.time.Time, optional, must be keyword
         The time this frame was observed.  If None, will be the same as
-        `equinox`.
+        ``equinox``.
     """
 
     preferred_representation = SphericalRepresentation
@@ -268,19 +268,19 @@ def fk4noe_to_fk4noe(fk4necoord1, fk4neframe2):
 @frame_transform_graph.add_coord_name
 class Galactic(BaseCoordinateFrame):
     """
-    Galactic Coordinates
+    Galactic Coordinates.
 
     Parameters
     ----------
     representation : `BaseRepresentation` or None
         A representation object or None to have no data (or use the other keywords)
     l : `Angle`, optional, must be keyword
-        The Galactic longitude for this object (`b` must also be given and
-        `representation` must be None).
+        The Galactic longitude for this object (``b`` must also be given and
+        ``representation`` must be None).
     b : `Angle`, optional, must be keyword
-        The Galactic latitude for this object (`l` must also be given and
-        `representation` must be None).
-    distance : `Quantity`, optional, must be keyword
+        The Galactic latitude for this object (``l`` must also be given and
+        ``representation`` must be None).
+    distance : `~astropy.units.Quantity`, optional, must be keyword
         The Distance for this object along the line-of-sight.
     """
 
@@ -303,18 +303,18 @@ class Galactic(BaseCoordinateFrame):
 @frame_transform_graph.add_coord_name
 class AltAz(BaseCoordinateFrame):
     """
-    docstr
+    A coordinate or frame in the AltAz system.
 
     Parameters
     ----------
     representation : `BaseRepresentation` or None
         A representation object or None to have no data (or use the other keywords)
     az : `Angle`, optional, must be keyword
-        The Azimuth for this object (`alt` must also be given and
-        `representation` must be None).
+        The Azimuth for this object (``alt`` must also be given and
+        ``representation`` must be None).
     alt : `Angle`, optional, must be keyword
-        The Altitude for this object (`az` must also be given and
-        `representation` must be None).
+        The Altitude for this object (``az`` must also be given and
+        ``representation`` must be None).
     distance : `Quantity`, optional, must be keyword
         The Distance for this object along the line-of-sight.
     """
