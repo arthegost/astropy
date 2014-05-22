@@ -58,3 +58,9 @@ file_coverage.txt
 func_coverage.txt
 
 subpack_coverage.txt
+
+worst_functions.txt
+
+function_coverage.pdf
+
+coverage_analysis.py
