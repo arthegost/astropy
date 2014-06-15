@@ -229,7 +229,7 @@ class ColumnGroups(BaseGroups):
                 vals = np.array([func(par_col[i0: i1]) for i0, i1 in izip(i0s, i1s)])
         except Exception:
             raise TypeError("Cannot aggregate column '{0}'"
-                                        .format(par_col.name))
+                            .format(par_col.name))
 
         out = par_col.__class__(data=vals, name=par_col.name, description=par_col.description,
                                 unit=par_col.unit, format=par_col.format, meta=par_col.meta)
