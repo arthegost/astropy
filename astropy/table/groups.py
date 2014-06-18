@@ -215,21 +215,46 @@ class ColumnGroups(BaseGroups):
         else:
             return self._keys
 
+    def std(self):
+        i0s = self.indices[:-1]
+        vals = self.parent_column
+        counts = np.diff(self.indices)
+        sums = np.add.reduceat(vals, i0s)
+        means = sums / counts
+        means_i = np.repeat(means, counts)
+        variances = np.add.reduceat((vals - means_i) ** 2, i0s) / (counts - 1)  # fail for counts=1
+        return np.sqrt(variances)
+
     def aggregate(self, func):
+        from .table import MaskedColumn
+
         i0s, i1s = self.indices[:-1], self.indices[1:]
         par_col = self.parent_column
-        sp_case = func is np.sum
-        
+
+        remap_funcs = {np.sum: {'func': np.add},
+                       np.mean: {'func': np.add,
+                                 'post_func': lambda vals, indices: vals / np.diff(indices) },
+                       np.min: {'func': np.minimum},
+                       np.max: {'func': np.maximum},
+        }
+
+        remap = remap_funcs.get(func, {'func': func})
         try:
-            if (hasattr(func, 'reduceat') or sp_case) and not hasattr(par_col, 'mask'):
-                if sp_case:
-                    func = np.add
-                vals = func.reduceat(par_col, i0s)
-            else:
+            if isinstance(par_col, MaskedColumn) or not hasattr(remap['func'], 'reduceat'):
+                raise Exception
+
+            if 'pre_func' in remap:
+                vals = remap['pre_func'](par_col, self.indices)
+            vals = remap['func'].reduceat(par_col, i0s)
+            if 'post_func' in remap:
+                vals = remap['post_func'](vals, self.indices)
+            print('Used reduceat!')
+        except:
+            try:
                 vals = np.array([func(par_col[i0: i1]) for i0, i1 in izip(i0s, i1s)])
-        except Exception:
-            raise TypeError("Cannot aggregate column '{0}'"
-                            .format(par_col.name))
+            except Exception:
+                raise TypeError("Cannot aggregate column '{0}'"
+                                .format(par_col.name))
 
         out = par_col.__class__(data=vals, name=par_col.name, description=par_col.description,
                                 unit=par_col.unit, format=par_col.format, meta=par_col.meta)
