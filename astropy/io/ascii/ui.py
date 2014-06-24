@@ -22,6 +22,7 @@ from . import sextractor
 from . import ipac
 from . import latex
 from . import html
+from . import fastbasic
 
 from ...table import Table
 
@@ -179,7 +180,8 @@ def _guess(table, read_kwargs):
             return dat
 
         except (core.InconsistentTableError, ValueError, TypeError,
-                core.OptionalTableImportError, core.ParameterError):
+                core.OptionalTableImportError, core.ParameterError) as e:
+            print(e)
             failed_kwargs.append(guess_kwargs)
     else:
         # failed all guesses, try the original read_kwargs without column requirements
@@ -206,6 +208,7 @@ def _guess(table, read_kwargs):
 
 def _get_guess_kwargs_list():
     guess_kwargs_list = [dict(Reader=basic.Rdb),
+						 dict(Reader=fastbasic.FastTab),
                          dict(Reader=basic.Tab),
                          dict(Reader=cds.Cds),
                          dict(Reader=daophot.Daophot),
@@ -215,7 +218,8 @@ def _get_guess_kwargs_list():
                          dict(Reader=latex.AASTex),
                          dict(Reader=html.HTML)
                          ]
-    for Reader in (basic.CommentedHeader, basic.Basic, basic.NoHeader):
+    for Reader in (basic.CommentedHeader, fastbasic.FastBasic, basic.Basic,
+				   fastbasic.FastNoHeader, basic.NoHeader):
         for delimiter in ("|", ",", " ", "\s"):
             for quotechar in ('"', "'"):
                 guess_kwargs_list.append(dict(
