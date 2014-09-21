@@ -12,47 +12,6 @@ from ...utils import OrderedDict
 
 from . import core
 
-class ColumnOrderList(list):
-    """
-    List of tuples that sorts in a specific order that makes sense for
-    astropy table column attributes.
-    """
-    def sort(self, cmp=None, key=None, reverse=False):
-        super(ColumnOrderList, self).sort(cmp, key, reverse)
-        column_keys = ['name', 'unit', 'type', 'format', 'description', 'meta']
-        in_dict = dict(self)
-        out_list = []
-
-        for key in column_keys:
-            if key in in_dict:
-                out_list.append((key, in_dict[key]))
-        for key, val in self:
-            if key not in column_keys:
-                out_list.append((key, val))
-
-        # Clear list (is there a better way?)
-        while True:
-            try:
-                self.pop()
-            except IndexError:
-                break
-
-        self.extend(out_list)
-
-class ColumnDict(dict):
-    """
-    Specialized dict subclass to represent attributes of a Column
-    and return items() in a preferred order.  This is only for use
-    in generating a YAML map representation that has a fixed order.
-    """
-
-    def items(self):
-        """
-        Return items as a ColumnOrderList, which sorts in the preferred
-        way for column attributes.
-        """
-        return ColumnOrderList(super(ColumnDict, self).items())
-
 def _construct_odict(load, node):
     """
     Construct OrderedDict from !!omap in yaml safe load.
@@ -153,13 +112,39 @@ def _repr_odict(dumper, data):
     return _repr_pairs(dumper, u'tag:yaml.org,2002:omap', data.iteritems())
 
 
-def _repr_column_dict(dumper, data):
+class NoSortList(list):
     """
-    Represent ColumnDict in yaml dump.
+    Special list with a stubbed sort method that does nothing.
+    """
+    def sort(self, cmp=None, key=None, reverse=False):
+        pass
+
+
+class NoOmapOrderedDict(OrderedDict):
+    """
+    Specialized variant of OrderedDict to represent a dictionary that
+    is ordered and maintains that ordering on output to JSON, but is
+    not required to maintain order on input (so the !!omap tag is not
+    used).  This is mostly for representing attributes in a way that
+    is predictable for human readers.
+    """
+
+    def items(self):
+        """
+        Return items as a NoSortList, which leaves them in the original
+        OrderedDict order.  This is needed because the JSON map routine
+        wants to sort the list from self.items() here.
+        """
+        return NoSortList(super(NoOmapOrderedDict, self).items())
+
+def _repr_no_omap_ordered_dict(dumper, data):
+    """
+    Represent NoOmapOrderedDict in yaml dump.
 
     This is the same as an ordinary mapping except that the keys
-    are written in a fixed order that makes sense for astropy table
-    columns.
+    are written in the original order.  It differs from OrderedDict
+    in that an ordinary map tag is used instead of !!omap, resulting
+    in cleaner output.
     """
     return dumper.represent_mapping(u'tag:yaml.org,2002:map', data)
 
@@ -168,12 +153,14 @@ def _get_col_attributes(col):
     """
     Extract information from a column (apart from the values) that is required
     to fully serialize the column.
+
+    Use the order: ['name', 'unit', 'type', 'format', 'description', 'meta']
     """
-    attrs = ColumnDict()
+    attrs = NoOmapOrderedDict()
     attrs['name'] = col.name
-    attrs['type'] = col.dtype.type.__name__
     if col.unit:
         attrs['unit'] = str(col.unit)
+    attrs['type'] = col.dtype.type.__name__
     if col.format:
         attrs['format'] = col.format
     if col.description:
@@ -221,8 +208,8 @@ class EcsvHeader(core.BaseHeader):
             custom odict representer.
             """
 
+        TableDumper.add_representer(NoOmapOrderedDict, _repr_no_omap_ordered_dict)
         TableDumper.add_representer(OrderedDict, _repr_odict)
-        TableDumper.add_representer(ColumnDict, _repr_column_dict)
 
         meta = {}
         if self.table_meta:
