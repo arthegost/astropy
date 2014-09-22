@@ -294,7 +294,7 @@ class Ecsv(core.BaseReader):
       4 5 6
     """
     _format_name = 'ecsv'
-    _description = 'Data-table Text Interchange Format'
+    _description = 'Enhanced Character-Separated Values'
 
     def __init__(self):
         core.BaseReader.__init__(self)
