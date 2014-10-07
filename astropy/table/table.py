@@ -311,7 +311,7 @@ class Table(object):
 
     @mask.setter
     def mask(self, val):
-        self.mask[:] = val
+        self.mask[()] = val
 
     @property
     def _mask(self):
@@ -818,7 +818,7 @@ class Table(object):
             else:
                 new_column = NewColumn(name=name, length=len(self), dtype=value.dtype,
                                        shape=value.shape[1:])
-                new_column[:] = value
+                new_column[()] = value
 
                 if isinstance(value, Quantity):
                     new_column.unit = value.unit
@@ -833,7 +833,7 @@ class Table(object):
 
             if isinstance(item, six.string_types):
                 # Set an existing column
-                self.columns[item][:] = value
+                self.columns[item][()] = value
 
             elif isinstance(item, (int, np.integer)):
                 # Set the corresponding row assuming value is an interable.
@@ -1738,7 +1738,7 @@ class Table(object):
 
         indexes = self.argsort(keys)  # Allow different sort algorithm??
         for col in self.columns.values():
-            col[:] = col.take(indexes, axis=0)
+            col[()] = col.take(indexes, axis=0)
 
     def reverse(self):
         '''
@@ -1769,7 +1769,7 @@ class Table(object):
                   Max  Miller  12
         '''
         for col in self.columns.values():
-            col[:] = col[::-1].copy()
+            col[()] = col[::-1].copy()
 
     @classmethod
     def read(cls, *args, **kwargs):
