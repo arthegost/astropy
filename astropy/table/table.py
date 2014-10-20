@@ -9,6 +9,7 @@ import warnings
 import re
 
 from copy import deepcopy
+from copy import copy as copy_stdlib
 from distutils import version
 
 import numpy as np
@@ -442,12 +443,12 @@ class Table(object):
                 col = self.ColumnClass(name=(name or col.name), data=col, dtype=dtype,
                                        copy=copy)
             elif self._is_table_compatible(col):
+                name = getattr(col, 'name', name)
                 if copy:
                     if hasattr(col, 'copy'):
                         col = col.copy()
                     else:
-                        from copy import copy as copy_function
-                        col = copy_function(col)
+                        col = copy_stdlib(col)
                 col.name = name
                 # TODO: What about dtype?
             elif isinstance(col, np.ndarray) or isiterable(col):
@@ -1165,7 +1166,7 @@ class Table(object):
             # Copy new columns, being aware that copy() method might not copy
             # the name.
             names = [col.name for col in cols]
-            cols = [col.copy() for col in cols]
+            cols = [(col.copy() if hasattr(col, 'copy') else copy_stdlib(col)) for col in cols]
             for name, col in zip(names, cols):
                 col.name = name
 
