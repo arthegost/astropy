@@ -8,10 +8,9 @@ import warnings
 import numpy as np
 
 from ...tests.helper import pytest, catch_warnings
-from ...table import Table
+from ...table import Table, TableMergeError
 from ...utils import OrderedDict, metadata
 from ...utils.metadata import MergeConflictError
-from .. import np_utils
 from ... import table
 from ... import log
 
@@ -270,14 +269,14 @@ class TestJoin():
         t1 = self.t1
         t2 = self.t2
         t1['b_1'] = 1  # Add a new column b_1 that will conflict with auto-rename
-        with pytest.raises(np_utils.TableMergeError):
+        with pytest.raises(TableMergeError):
             table.join(t1, t2, keys='a')
 
     def test_missing_keys(self):
         """Merge on a key column that doesn't exist"""
         t1 = self.t1
         t2 = self.t2
-        with pytest.raises(np_utils.TableMergeError):
+        with pytest.raises(TableMergeError):
             table.join(t1, t2, keys=['a', 'not there'])
 
     def test_bad_join_type(self):
@@ -295,7 +294,7 @@ class TestJoin():
         del t1['b']
         del t2['a']
         del t2['b']
-        with pytest.raises(np_utils.TableMergeError):
+        with pytest.raises(TableMergeError):
             table.join(t1, t2)
 
     def test_masked_key_column(self):
@@ -304,7 +303,7 @@ class TestJoin():
         t2 = Table(self.t2, masked=True)
         table.join(t1, t2)  # OK
         t2['a'].mask[0] = True
-        with pytest.raises(np_utils.TableMergeError):
+        with pytest.raises(TableMergeError):
             table.join(t1, t2)
 
     def test_col_meta_merge(self):
@@ -499,15 +498,15 @@ class TestVStack():
                                   '  1 bar']
 
     def test_stack_incompatible(self):
-        with pytest.raises(np_utils.TableMergeError) as excinfo:
+        with pytest.raises(TableMergeError) as excinfo:
             table.vstack([self.t1, self.t3], join_type='inner')
         assert "The 'b' columns have incompatible types:" in str(excinfo)
 
-        with pytest.raises(np_utils.TableMergeError) as excinfo:
+        with pytest.raises(TableMergeError) as excinfo:
             table.vstack([self.t1, self.t3], join_type='outer')
         assert "The 'b' columns have incompatible types:" in str(excinfo)
 
-        with pytest.raises(np_utils.TableMergeError):
+        with pytest.raises(TableMergeError):
             table.vstack([self.t1, self.t2], join_type='exact')
 
     def test_vstack_one_masked(self):
@@ -699,7 +698,7 @@ class TestHStack():
     def test_stack_incompatible(self):
         # For join_type exact, which will fail here because n_rows
         # does not match
-        with pytest.raises(np_utils.TableMergeError):
+        with pytest.raises(TableMergeError):
             table.hstack([self.t1, self.t3], join_type='exact')
 
     def test_hstack_one_masked(self):
