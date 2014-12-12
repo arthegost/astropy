@@ -24,6 +24,7 @@ from . import basic
 from ...utils import OrderedDict
 from ...utils.exceptions import AstropyUserWarning
 from ...table.pprint import _format_funcs, _auto_format_func
+from ...table import col_iter_str_vals
 
 
 class IpacFormatErrorDBMS(Exception):
@@ -304,7 +305,7 @@ class IpacData(fixedwidth.FixedWidthData):
         vals_list = []
         # just to make sure
         self._set_col_formats()
-        col_str_iters = [col.iter_str_vals() for col in self.cols]
+        col_str_iters = [col_iter_str_vals(col) for col in self.cols]
         for vals in zip(*col_str_iters):
             vals_list.append(vals)
 
