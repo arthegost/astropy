@@ -108,6 +108,8 @@ New Features
     serves a dual function of providing configurable summary information about
     the column, and acting as a manager of column attributes such as
     name, format, or description. [#3731]
+  - Table columns may now have a structured (recarray) dtype.  For
+    example, a column could be an (integer, string) pair. [#3759]
 
 - ``astropy.tests``
 
