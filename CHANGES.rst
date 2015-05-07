@@ -64,6 +64,9 @@ New Features
   - Added ``Table.to_pandas`` and ``Table.from_pandas`` for converting to/from
     pandas dataframes. [#3504]
 
+  - Table columns may now have a structured (recarray) dtype.  For
+    example, a column could be an (integer, string) pair. [#3759]
+
 - ``astropy.tests``
 
 - ``astropy.time``
