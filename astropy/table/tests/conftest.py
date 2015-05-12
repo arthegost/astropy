@@ -145,7 +145,9 @@ MIXIN_COLS = {'quantity': [0, 1, 2, 3] * u.m,
               'time': time.Time([2000, 2001, 2002, 2003], format='jyear'),
               'skycoord': coordinates.SkyCoord(ra=[0, 1, 2, 3] * u.deg,
                                                dec=[0, 1, 2, 3] * u.deg),
-              'arraywrap': table_helpers.ArrayWrapper([0, 1, 2, 3])
+              'arraywrap': table_helpers.ArrayWrapper([0, 1, 2, 3]),
+              'ndarray': table.Column(data=[(7, 'a'), (8, 'b'), (9, 'c'), (9, 'c')],
+                                      dtype='<i4,|U1')
               }
 if HAS_PANDAS:
     MIXIN_COLS['pandas'] = pandas.Series([0, 1, 2, 3])
