@@ -19,7 +19,7 @@ except ImportError:
 import numpy as np
 
 from ...tests.helper import pytest
-from ...table import Table, QTable, join, hstack, vstack
+from ...table import Table, QTable, join, hstack, vstack, Column
 from ... import time
 from ... import coordinates
 from ... import units as u
@@ -60,7 +60,8 @@ def test_attributes(mixin_cols):
 
 
 def check_mixin_type(table, table_col, in_col):
-    if isinstance(in_col, u.Quantity) and type(table) is not QTable:
+    if ((isinstance(in_col, u.Quantity) and type(table) is not QTable)
+            or isinstance(in_col, Column)):
         assert type(table_col) is table.ColumnClass
     else:
         assert type(table_col) is type(in_col)
@@ -77,11 +78,11 @@ def test_make_table(table_types, mixin_cols):
     check_mixin_type(t, t['m'], mixin_cols['m'])
 
     cols = list(mixin_cols.values())
-    t = table_types.Table(cols, names=('i', 'a', 'b', 'c', 'm'))
+    t = table_types.Table(cols, names=('i', 'a', 'b', 'm'))
     check_mixin_type(t, t['m'], mixin_cols['m'])
 
     t = table_types.Table(cols)
-    check_mixin_type(t, t['col4'], mixin_cols['m'])
+    check_mixin_type(t, t['col3'], mixin_cols['m'])
 
 def test_io_ascii_write():
     """
@@ -275,7 +276,7 @@ def test_insert_row(mixin_cols):
     """
     t = QTable(mixin_cols)
     t['m'].info.description = 'd'
-    if isinstance(t['m'], u.Quantity):
+    if isinstance(t['m'], (u.Quantity, Column)):
         t.insert_row(1, t[-1])
         assert t[1] == t[-1]
         assert t['m'].info.description == 'd'
