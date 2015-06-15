@@ -18,7 +18,7 @@ from ..units import Quantity
 from ..utils import OrderedDict, isiterable, deprecated, minversion
 from ..utils.console import color_print
 from ..utils.metadata import MetaData
-from ..utils.data_info import InfoDescriptor
+from ..utils.data_info import InfoDescriptor, DataInfo
 from . import groups
 from .pprint import TableFormatter
 from .column import (BaseColumn, Column, MaskedColumn, _auto_names, FalseArray,
@@ -2237,4 +2237,21 @@ class StructuredArrayMixin(np.ndarray):
     """
     Minimal mixin using a simple subclass of numpy array
     """
-    _astropy_column_attrs = None
+    info = InfoDescriptor(DataInfo)
+
+    def __array_finalize__(self, obj):
+        import weakref
+        if obj is None:
+            return
+
+        if six.callable(super(StructuredArrayMixin, self).__array_finalize__):
+            super(StructuredArrayMixin, self).__array_finalize__(obj)
+
+        # Self was created from template (e.g. obj[slice] or (obj * 2))
+        # or viewcast e.g. obj.view(Column).  In either case we want to
+        # init Column attributes for self from obj if possible.
+        if hasattr(obj, 'info'):
+            self.info = obj.info.copy()
+            import pdb; pdb.set_trace()
+            self.info._parent_ref = weakref.ref(self)
+
