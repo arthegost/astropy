@@ -18,7 +18,7 @@ from ..units import Quantity
 from ..utils import OrderedDict, isiterable, deprecated, minversion
 from ..utils.console import color_print
 from ..utils.metadata import MetaData
-from ..utils.data_info import InfoDescriptor, DataInfo
+from ..utils.data_info import InfoDescriptor, MixinInfo
 from . import groups
 from .pprint import TableFormatter
 from .column import (BaseColumn, Column, MaskedColumn, _auto_names, FalseArray,
@@ -2237,10 +2237,9 @@ class StructuredArrayMixin(np.ndarray):
     """
     Minimal mixin using a simple subclass of numpy array
     """
-    info = InfoDescriptor(DataInfo)
+    info = InfoDescriptor(MixinInfo)
 
     def __array_finalize__(self, obj):
-        import weakref
         if obj is None:
             return
 
@@ -2252,6 +2251,4 @@ class StructuredArrayMixin(np.ndarray):
         # init Column attributes for self from obj if possible.
         if hasattr(obj, 'info'):
             self.info = obj.info.copy()
-            import pdb; pdb.set_trace()
-            self.info._parent_ref = weakref.ref(self)
 
