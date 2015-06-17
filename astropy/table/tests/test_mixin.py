@@ -19,7 +19,7 @@ except ImportError:
 import numpy as np
 
 from ...tests.helper import pytest
-from ...table import Table, QTable, join, hstack, vstack, Column
+from ...table import Table, QTable, join, hstack, vstack, Column, NdarrayMixin
 from ... import time
 from ... import coordinates
 from ... import units as u
@@ -424,3 +424,32 @@ def test_skycoord_representation():
                            '  m,deg,m   ',
                            '------------',
                            '1.0,90.0,0.0']
+
+
+def test_ndarray_mixin():
+    """
+    Test directly adding a plain structured array into a table instead of the
+    view as an NdarrayMixin.  Once added as an NdarrayMixin then all the previous
+    tests apply.
+    """
+    a = np.array([(1, 'a'), (2, 'b'), (3, 'c'), (4, 'd')],
+                 dtype='<i4,|S1')
+    b = np.array([(10, 'aa'), (20, 'bb'), (30, 'cc'), (40, 'dd')],
+                 dtype=[('x', 'i4'), ('y', 'S2')])
+    t = Table([a, b], names=['a', 'b'])
+
+    assert isinstance(t['a'], NdarrayMixin)
+
+    assert t['a'][1][1] == 'b'
+    assert t['a'][2][0] == 3
+
+    assert t[1]['a'][1] == 'b'
+    assert t[2]['a'][0] == 3
+
+    assert isinstance(t['b'], NdarrayMixin)
+
+    assert t['b'][1]['x'] == 20
+    assert t['b'][1]['y'] == 'bb'
+
+    assert t[1]['b']['x'] == 20
+    assert t[1]['b']['y'] == 'bb'

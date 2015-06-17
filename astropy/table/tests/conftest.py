@@ -141,7 +141,7 @@ MIXIN_COLS = {'quantity': [0, 1, 2, 3] * u.m,
                                                dec=[0, 1, 2, 3] * u.deg),
               'arraywrap': table_helpers.ArrayWrapper([0, 1, 2, 3]),
               'ndarray': np.array([(7, 'a'), (8, 'b'), (9, 'c'), (9, 'c')],
-                           dtype='<i4,|S1').view(table.StructuredArrayMixin),
+                           dtype='<i4,|S1').view(table.NdarrayMixin),
               }
 
 @pytest.fixture(params=sorted(MIXIN_COLS))

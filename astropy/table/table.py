@@ -449,7 +449,7 @@ class Table(object):
         for col, name, def_name, dtype in zip(data, names, def_names, dtype):
             # Structured ndarray gets viewed as a mixin
             if isinstance(col, np.ndarray) and len(col.dtype) > 1:
-                col = col.view(StructuredArrayMixin)
+                col = col.view(NdarrayMixin)
 
             if isinstance(col, (Column, MaskedColumn)):
                 col = self.ColumnClass(name=(name or col.info.name or def_name),
@@ -903,7 +903,7 @@ class Table(object):
 
             # Structured ndarray gets viewed as a mixin
             if isinstance(value, np.ndarray) and len(value.dtype) > 1:
-                value = value.view(StructuredArrayMixin)
+                value = value.view(NdarrayMixin)
 
             # Make new column and assign the value.  If the table currently
             # has no rows (len=0) of the value is already a Column then
@@ -2233,7 +2233,7 @@ class QTable(Table):
                 for key, col in self.columns.items())
         return (columns, self.meta)
 
-class StructuredArrayMixin(np.ndarray):
+class NdarrayMixin(np.ndarray):
     """
     Minimal mixin using a simple subclass of numpy array
     """
@@ -2243,8 +2243,8 @@ class StructuredArrayMixin(np.ndarray):
         if obj is None:
             return
 
-        if six.callable(super(StructuredArrayMixin, self).__array_finalize__):
-            super(StructuredArrayMixin, self).__array_finalize__(obj)
+        if six.callable(super(NdarrayMixin, self).__array_finalize__):
+            super(NdarrayMixin, self).__array_finalize__(obj)
 
         # Self was created from template (e.g. obj[slice] or (obj * 2))
         # or viewcast e.g. obj.view(Column).  In either case we want to
