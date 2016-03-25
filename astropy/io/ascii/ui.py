@@ -244,6 +244,11 @@ def read(table, guess=None, **kwargs):
             One-character string defining the exponent or ``'Fortran'`` to auto-detect
             Fortran-style scientific notation like ``'3.14159D+00'`` (``'E'``, ``'D'``, ``'Q'``),
             all case-insensitive; default ``'E'``, all other imply ``use_fast_converter``
+    chunk_size : int
+        If supplied with a value > 0 then read the table in chunks of
+        approximiately chunk_size bytes and return a generator that provides
+        each sub-table in sequence.  This implies use of the fast reader and
+        disables guessing.  (default is to full table in one pass).
     Reader : `~astropy.io.ascii.BaseReader`
         Reader class (DEPRECATED)
     encoding: str
@@ -251,10 +256,19 @@ def read(table, guess=None, **kwargs):
 
     Returns
     -------
-    dat : `~astropy.table.Table`
+    dat : `~astropy.table.Table` OR <generator> (if chunk_size > 0)
         Output table
+
     """
     del _read_trace[:]
+
+    if False and kwargs.get('chunk_size'):
+        if kwargs.get('fast_reader', 'force') not in (True, 'force'):
+            raise ValueError("using chunk_size requires fast_reader=True or 'force'")
+        kwargs['fast_reader'] = 'force'
+
+        if guess is not False:
+            raise ValueError("using chunk_size requires guess=False")
 
     if 'fill_values' not in kwargs:
         kwargs['fill_values'] = [('', '0')]
@@ -264,6 +278,7 @@ def read(table, guess=None, **kwargs):
     fast_reader_param = kwargs.get('fast_reader', True)
     if 'Outputter' in kwargs:  # user specified Outputter, not supported for fast reading
         fast_reader_param = False
+
     format = kwargs.get('format')
     new_kwargs.update(kwargs)
 
@@ -328,6 +343,10 @@ def read(table, guess=None, **kwargs):
 
     if not guess:
         reader = get_reader(**new_kwargs)
+        if format is None:
+            print('Format is None')
+            format = reader._format_name
+
         # Try the fast reader version of `format` first if applicable.  Note that
         # if user specified a fast format (e.g. format='fast_basic') this test
         # will fail and the else-clause below will be used.

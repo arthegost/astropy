@@ -16,12 +16,14 @@ from ....extern import six  # noqa
 from ....extern.six.moves import zip, cStringIO as StringIO
 from ... import ascii
 from ....table import Table
+from .... import table
 from ....units import Unit
+from ....table.table_helpers import simple_table
 
 from .common import (raises, assert_equal, assert_almost_equal,
                      assert_true, setup_function, teardown_function)
 from .. import core
-from ..ui import _probably_html, get_read_trace
+from ..ui import _probably_html, get_read_trace, cparser
 
 try:
     import bz2  # pylint: disable=W0611
@@ -114,8 +116,8 @@ def test_read_with_names_arg(fast_reader):
     """
     Test that a bad value of `names` raises an exception.
     """
-    with pytest.raises(ValueError):
-        dat = ascii.read(['c d', 'e f'], names=('a', ), guess=False, fast_reader=fast_reader)
+    with pytest.raises((ValueError, cparser.CParserError)):
+        ascii.read(['c d', 'e f'], names=('a', ), guess=False, fast_reader=fast_reader)
 
 
 @pytest.mark.parametrize('fast_reader', [True, False, 'force'])
@@ -236,31 +238,31 @@ def test_daophot_multiple_aperture2():
 @pytest.mark.parametrize('fast_reader', [True, False, 'force'])
 def test_empty_table_no_header(fast_reader):
     with pytest.raises(ascii.InconsistentTableError):
-        table = ascii.read('t/no_data_without_header.dat', Reader=ascii.NoHeader,
-                            guess=False, fast_reader=fast_reader)
+        ascii.read('t/no_data_without_header.dat', Reader=ascii.NoHeader,
+                   guess=False, fast_reader=fast_reader)
 
 
 @pytest.mark.parametrize('fast_reader', [True, False, 'force'])
 def test_wrong_quote(fast_reader):
-    with pytest.raises(ascii.InconsistentTableError):
-        table = ascii.read('t/simple.txt', guess=False, fast_reader=fast_reader)
+    with pytest.raises((ascii.InconsistentTableError, cparser.CParserError)):
+        ascii.read('t/simple.txt', guess=False, fast_reader=fast_reader)
 
 
 @pytest.mark.parametrize('fast_reader', [True, False, 'force'])
 def test_extra_data_col(fast_reader):
-    with pytest.raises(ascii.InconsistentTableError):
-        table = ascii.read('t/bad.txt', fast_reader=fast_reader)
+    with pytest.raises((ascii.InconsistentTableError, cparser.CParserError)):
+        ascii.read('t/bad.txt', fast_reader=fast_reader)
 
 
 @pytest.mark.parametrize('fast_reader', [True, False, 'force'])
 def test_extra_data_col2(fast_reader):
-    with pytest.raises(ascii.InconsistentTableError):
-        table = ascii.read('t/simple5.txt', delimiter='|', fast_reader=fast_reader)
+    with pytest.raises((ascii.InconsistentTableError, cparser.CParserError)):
+        ascii.read('t/simple5.txt', delimiter='|', fast_reader=fast_reader)
 
 
 @raises(IOError)
 def test_missing_file():
-    table = ascii.read('does_not_exist')
+    ascii.read('does_not_exist')
 
 
 @pytest.mark.parametrize('fast_reader', [True, False, 'force'])
@@ -1297,3 +1299,46 @@ def test_unsupported_read_with_encoding(tmpdir):
         with pytest.raises(ValueError):
             ascii.read('t/simple3.txt', guess=False, fast_reader=False,
                        encoding='latin1', format='csv')
+
+def test_read_chunks_input_types():
+    """
+    Test chunked reading for different input types: file path, file object,
+    and string input.
+    """
+    fpath = 't/test5.dat'
+    t1 = ascii.read(fpath, header_start=1, data_start=3)
+
+    for fp in (fpath, open(fpath, 'rb'), open(fpath, 'rb').read()):
+        t_gen = ascii.read(fp, header_start=1, data_start=3, chunk_size=300, guess=False)
+        ts = list(t_gen)
+        for t in ts:
+            for col, col1 in zip(t.columns.values(), t1.columns.values()):
+                assert col.name == col1.name
+                assert col.dtype.kind == col1.dtype.kind
+
+        assert len(ts) == 4
+        t2 = table.vstack(ts)
+        assert np.all(t1 == t2)
+
+def test_read_chunks_formats():
+    """
+    Test different supported formats for chunked reading.
+    """
+    t1 = simple_table(size=100, cols=10)
+    for i, name in enumerate(t1.colnames):
+        t1.rename_column(name, 'col{}'.format(i + 1))
+
+    for format in 'tab', 'csv', 'no_header', 'commented_header', 'rdb', 'basic':
+        out = StringIO()
+        ascii.write(t1, out, format=format)
+        t_gen = ascii.read(out.getvalue(), format=format, chunk_size=300, guess=False)
+        ts = list(t_gen)
+        for t in ts:
+            for col, col1 in zip(t.columns.values(), t1.columns.values()):
+                assert col.name == col1.name
+                assert col.dtype.kind == col1.dtype.kind
+
+        print(len(ts))
+        assert len(ts) > 4
+        t2 = table.vstack(ts)
+        assert np.all(t1 == t2)

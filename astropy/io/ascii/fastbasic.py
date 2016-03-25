@@ -91,6 +91,7 @@ class FastBasic(object):
             raise core.ParameterError("The C reader does not use a Splitter class")
 
         self.strict_names = self.kwargs.pop('strict_names', False)
+        self.chunk_size = self.kwargs.pop('chunk_size', None)
 
         self.engine = cparser.CParser(table, self.strip_whitespace_lines,
                                       self.strip_whitespace_fields,
@@ -110,9 +111,19 @@ class FastBasic(object):
             try_float = {}
             try_string = {}
 
-        with set_locale('C'):
-            data, comments = self.engine.read(try_int, try_float, try_string)
+        if self.chunk_size:
+            return self.table_chunk_generator(try_int, try_float, try_string)
+        else:
+            with set_locale('C'):
+                data, comments = self.engine.read(try_int, try_float, try_string)
+            return self.make_table(data, comments)
 
+    def table_chunk_generator(self, try_int, try_float, try_string):
+        for comments, data in self.engine._read_chunks(try_int, try_float, try_string,
+                                                       self.chunk_size):
+            yield self.make_table(data, comments)
+
+    def make_table(self, data, comments):
         meta = OrderedDict()
         if comments:
             meta['comments'] = comments
@@ -232,21 +243,14 @@ class FastCommentedHeader(FastBasic):
         if 'data_start' not in kwargs:
             self.data_start = 0
 
-    def read(self, table):
-        """
-        Read input data (file-like object, filename, list of strings, or
-        single string) into a Table and return the result.
-        """
-        out = super(FastCommentedHeader, self).read(table)
+    def make_table(self, data, comments):
+        meta = OrderedDict()
+        if comments:
+            meta['comments'] = comments[1:]
+            if not meta['comments']:
+                del meta['comments']
 
-        # Strip off first comment since this is the header line for
-        # commented_header format.
-        if 'comments' in out.meta:
-            out.meta['comments'] = out.meta['comments'][1:]
-            if not out.meta['comments']:
-                del out.meta['comments']
-
-        return out
+        return Table(data, names=list(self.engine.get_names()), meta=meta)
 
     def _read_header(self):
         tmp = self.engine.source
