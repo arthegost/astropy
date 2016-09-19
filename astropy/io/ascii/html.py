@@ -13,6 +13,7 @@ from __future__ import absolute_import, division, print_function
 import warnings
 import numpy
 
+import numpy as np
 from ...extern import six
 from ...extern.six.moves import zip, range
 
@@ -427,6 +428,10 @@ class HTML(core.BaseReader):
 
                                 new_cols_escaped.append(col_escaped)
 
+                    # Do all the output formatting within the context manager so
+                    # that masked values are replaced by an empty string instead of
+                    # the numpy default '--'.  This is a bit of a hack because the
+                    # io.ascii fill_values machinery is entirely ignored.  See #5354.
                     for row in zip(*col_str_iters):
                         with w.tag('tr'):
                             for el, col_escaped in zip(row, new_cols_escaped):
