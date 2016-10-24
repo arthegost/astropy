@@ -655,11 +655,9 @@ def test_roundtrip_masked(fmt_name_class):
         return
 
     # Skip certain readers.  Aastex should be OK after #????
-    if fmt_name in ['fixed_width', 'aastex', 'latex']:
-        return
-
-    if fmt_name == 'html' and not HAS_BEAUTIFUL_SOUP:
-        return
+    if (fmt_name in ['fixed_width'] or
+            (fmt_name == 'html' and not HAS_BEAUTIFUL_SOUP)):
+        pytest.skip('Round-tripping not supported for {}'.format(fmt_name))
 
     t = simple_table(masked=True)
 
