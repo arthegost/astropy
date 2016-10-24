@@ -24,6 +24,9 @@ New Features
 
 - ``astropy.io.ascii``
 
+  - Allow round-tripping ASCII masked tables for most formats by using
+    empty string for masked elements. [#5427]
+
   - Allow reading HTML tables with unicode column values in Python 2.7. [#5410]
 
 - ``astropy.io.fits``
@@ -110,6 +113,10 @@ API Changes
 - ``astropy.cosmology``
 
 - ``astropy.io.ascii``
+
+  - Masked table elements are now written out using an empty string
+    instead of ``--``.  This is consistent with common usage in CSV tables
+    and allows allows round-tripping ASCII masked tables. [#5427]
 
   - ASCII writers now accept an 'overwrite' argument.
     The default behavior is changed so that a warning will be
