@@ -52,6 +52,11 @@ astropy.stats
 astropy.table
 ^^^^^^^^^^^^^
 
+- Added support for writing a table with ``astropy.time.Time`` columns
+  to a FITS file and reading it back with considerable round-tripping.
+  Verification of the time coordinate information is done accordingly.
+  [#6176]
+
 astropy.tests
 ^^^^^^^^^^^^^
 
