@@ -135,7 +135,8 @@ def setdiff(table1, table2, keys=None):
     Take a set difference of table rows.
 
     The row set difference will contain all rows in table1 that are not
-    present in table2.
+    present in table2. If the keys parameter is not defined, only the columns
+    shared by table1 and table2 will be in the output table.
 
     Parameters
     ----------
@@ -182,19 +183,26 @@ def setdiff(table1, table2, keys=None):
       --- ---
         5   b
     """
-    # Make a light internal copy to avoid touching table2
-    table2 = table2.copy(copy_data=False)
-    table2['__index__'] = np.zeros(len(table2), dtype=np.uint8)  # dummy column
     if keys is None:
         keys = table1.colnames
+    else:
+        #Check that all keys are in table1
+        diff1 = np.setdiff1d(keys, table1.keys())
+        if len(diff1) != 0:
+            raise ValueError("The {} columns are missing from table1, cannot take "
+                             "a set difference.".format(diff1))
 
-        # Check that all keys in table2 are in table1, if not, raise error
-        for key in table1.keys():
-            if key not in table2.keys():
-                raise ValueError("The {} column is in table1 but not in "
-                                 "table2, cannot take a set difference."
-                                 .format(key))
+    # Check that all keys are in table2
+    diff2 = np.setdiff1d(keys, table2.keys())
+    if len(diff2) != 0:
+        raise ValueError("The {} columns are missing from table2, cannot take "
+                         "a set difference.".format(diff2))
 
+    # Make a light internal copy to avoid touching table2
+    table2 = table2.copy(copy_data=False)
+    table2.meta = {}
+    table2.keep_columns(keys)
+    table2['__index__'] = np.zeros(len(table2), dtype=np.uint8)  # dummy column
 
     t12 = _join(table1, table2, join_type='left', keys=keys,
                 metadata_conflicts='silent')

@@ -471,16 +471,16 @@ class TestSetdiff():
                   '  1 bar  R3',
                   '  4 bar  R4']
         self.t1 = t_cls.read(lines1, format='ascii')
-        self.t1 = t_cls(self.t1, masked=True)
         self.t2 = t_cls.read(lines2, format='ascii')
-        self.t2 = t_cls(self.t2, masked=True)
         self.t3 = t_cls.read(lines3, format='ascii')
-        self.t3= t_cls(self.t3, masked=True)
+
 
 
     def test_default_same_columns(self, operation_table_type):
         self._setup(operation_table_type)
         out = table.setdiff(self.t1, self.t2)
+        self.t1 = operation_table_type(self.t1, masked=True)
+        self.t2 = operation_table_type(self.t2, masked=True)
         assert type(out['a']) is type(self.t1['a'])
         assert type(out['b']) is type(self.t1['b'])
         assert out.pformat() == [' a   b ',
@@ -491,6 +491,7 @@ class TestSetdiff():
     def test_default_same_tables(self, operation_table_type):
         self._setup(operation_table_type)
         out = table.setdiff(self.t1, self.t1)
+
         assert type(out['a']) is type(self.t1['a'])
         assert type(out['b']) is type(self.t1['b'])
         assert out.pformat() == [' a   b ',
@@ -505,6 +506,9 @@ class TestSetdiff():
     def test_extra_col_right_table(self, operation_table_type):
         self._setup(operation_table_type)
         out = table.setdiff(self.t1, self.t3)
+        self.t1 = operation_table_type(self.t1, masked=True)
+        self.t3 = operation_table_type(self.t3, masked=True)
+
         assert type(out['a']) is type(self.t1['a'])
         assert type(out['b']) is type(self.t1['b'])
         assert out.pformat() == [' a   b ',
@@ -515,6 +519,9 @@ class TestSetdiff():
     def test_keys(self, operation_table_type):
         self._setup(operation_table_type)
         out = table.setdiff(self.t3, self.t1, keys=['a', 'b'])
+        self.t1 = operation_table_type(self.t1, masked=True)
+        self.t3 = operation_table_type(self.t3, masked=True)
+
         assert type(out['a']) is type(self.t1['a'])
         assert type(out['b']) is type(self.t1['b'])
         assert out.pformat() == [' a   b ',
@@ -525,7 +532,7 @@ class TestSetdiff():
     def test_missing_key(self, operation_table_type):
         self._setup(operation_table_type)
 
-        with pytest.raises(TableMergeError):
+        with pytest.raises(ValueError):
             out = table.setdiff(self.t3, self.t1, keys=['a', 'd'])
 
 
