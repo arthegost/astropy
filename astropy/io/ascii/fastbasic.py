@@ -91,6 +91,7 @@ class FastBasic(object):
             raise core.ParameterError("The C reader does not use a Splitter class")
 
         self.strict_names = self.kwargs.pop('strict_names', False)
+        self.return_header_chars = self.kwargs['fast_reader'].pop('return_header_chars', False)
 
         self.engine = cparser.CParser(table, self.strip_whitespace_lines,
                                       self.strip_whitespace_fields,
@@ -118,6 +119,8 @@ class FastBasic(object):
         meta = OrderedDict()
         if comments:
             meta['comments'] = comments
+        if self.return_header_chars:
+            meta['__ascii_fast_reader_header_chars__'] = self.engine.header_chars
         return Table(data, names=list(self.engine.get_names()), meta=meta)
 
     def check_header(self):

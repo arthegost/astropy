@@ -191,6 +191,7 @@ cdef class CParser:
         int width
         object source
         object header_start
+        object header_chars
 
     def __cinit__(self, source, strip_line_whitespace, strip_line_fields,
                   delimiter=',',
@@ -380,6 +381,8 @@ cdef class CParser:
         if skip_lines(self.tokenizer, self.data_start, 0) != 0:
             self.raise_error("an error occurred while advancing to the first "
                              "line of data")
+
+        self.header_chars = self.source[:self.tokenizer.source_pos]
 
         cdef int data_end = -1 # keep reading data until the end
         if self.data_end is not None and self.data_end >= 0:
