@@ -428,18 +428,15 @@ cdef class CParser:
 
         # Build up chunkindices which has the indices for all N chunks
         # in an length N+1 array.
-        print('N BEFORE ', N)
         for i in range(1, N):
             index = max(offset + chunksize * i, chunkindices[i - 1])
             while index < source_len and self.source[index] != '\n':
                 index += 1
             if index < source_len:
-                print('GOT a chunk!', repr(self.source[index]), type(self.source[index]))
                 chunkindices.append(index + 1)
             else:
                 N = i
                 break
-        print('N AFTER ', N)
 
         self._set_fill_values()
         chunkindices.append(source_len)
@@ -576,73 +573,6 @@ cdef class CParser:
             process.terminate()
 
         return ret, line_comments
-
-    def _read_chunks(self, try_int, try_float, try_string, chunk_size):
-        """
-        Generator function that parses the input data in chunks of
-        approximately chunk_size bytes.  Returns the corresponding
-        sub-table at each iteration.
-        """
-        # These two "queues" are there for API compliance with the existing
-        # _read_chunk function.
-        queue = None
-        reconvert_queue = None
-
-        cdef int source_len = len(self.source)
-        self.tokenizer.source_pos = 0
-
-        if skip_lines(self.tokenizer, self.data_start, 0) != 0:
-            self.raise_error("an error occurred while advancing to the first "
-                             "line of data")
-
-        cdef list line_comments = self._get_comments(self.tokenizer)
-        cdef int N_proc = multiprocessing.cpu_count()
-        cdef int N_chunk = source_len // chunk_size
-
-        cdef int offset = self.tokenizer.source_pos
-
-        if offset == source_len: # no data
-            return (dict((name, np.array([], dtype=np.int_)) for name in
-                         self.names), [])
-
-        cdef int chunksize = math.ceil((source_len - offset) / float(N_chunk))
-        cdef list chunkindices = [offset]
-        print(N_chunk, source_len, chunk_size, offset, chunksize)
-
-        # Build up chunkindices which has the indices for all N chunks
-        # in an length N+1 array.  This ensures each chunk ends on a
-        # line ending boundary.
-        print(type(self.source))
-        for i in range(1, N_chunk):
-            print('start', i, chunkindices)
-            index = max(offset + chunksize * i, chunkindices[i - 1])
-            print('index=',index)
-            while index < source_len and self.source[index] != '\n':
-                print(repr(self.source[index]), type(self.source[index]))
-                index += 1
-            print('index=',index, 'source_len=', source_len)
-            if index < source_len:
-                chunkindices.append(index + 1)
-            else:
-                print('BREAK')
-                N_chunk = i
-                break
-
-        self._set_fill_values()
-        chunkindices.append(source_len)
-        cdef list processes = []
-
-        # Create args to read the N chunks
-        args_list = [(self, chunkindices[ii], chunkindices[ii + 1],
-                     try_int, try_float, try_string, queue, reconvert_queue, ii)
-                     for ii in range(N_chunk)
-                     if chunkindices[ii] != chunkindices[ii + 1]]
-
-        print(N_chunk, source_len, chunk_size)
-        for args in args_list:
-            print(args)
-            comments_and_data, err, proc = _read_chunk(*args)
-            yield comments_and_data  # tuple of (data, comments)
 
     cdef _set_fill_values(self):
         if self.fill_names is None:
