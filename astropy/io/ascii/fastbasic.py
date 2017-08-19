@@ -91,7 +91,6 @@ class FastBasic(object):
             raise core.ParameterError("The C reader does not use a Splitter class")
 
         self.strict_names = self.kwargs.pop('strict_names', False)
-        self.chunk_size = self.kwargs.pop('chunk_size', None)
 
         self.engine = cparser.CParser(table, self.strip_whitespace_lines,
                                       self.strip_whitespace_fields,
@@ -111,17 +110,9 @@ class FastBasic(object):
             try_float = {}
             try_string = {}
 
-        if self.chunk_size:
-            return self.table_chunk_generator(try_int, try_float, try_string)
-        else:
-            with set_locale('C'):
-                data, comments = self.engine.read(try_int, try_float, try_string)
-            return self.make_table(data, comments)
-
-    def table_chunk_generator(self, try_int, try_float, try_string):
-        for comments, data in self.engine._read_chunks(try_int, try_float, try_string,
-                                                       self.chunk_size):
-            yield self.make_table(data, comments)
+        with set_locale('C'):
+            data, comments = self.engine.read(try_int, try_float, try_string)
+        return self.make_table(data, comments)
 
     def make_table(self, data, comments):
         meta = OrderedDict()
