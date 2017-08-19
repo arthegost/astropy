@@ -1300,6 +1300,7 @@ def test_unsupported_read_with_encoding(tmpdir):
             ascii.read('t/simple3.txt', guess=False, fast_reader=False,
                        encoding='latin1', format='csv')
 
+
 def test_read_chunks_input_types():
     """
     Test chunked reading for different input types: file path, file object,
@@ -1319,6 +1320,7 @@ def test_read_chunks_input_types():
         assert len(ts) == 4
         t2 = table.vstack(ts)
         assert np.all(t1 == t2)
+
 
 def test_read_chunks_formats():
     """
