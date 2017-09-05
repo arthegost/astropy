@@ -68,6 +68,8 @@ astropy.table
 - Improved exception handling and error messages when column ``format`` 
   attribute is incorrect for the column type. [#6385]
 
+- Added new table operation ``astropy.table.setdiff``. [#6443]
+
 astropy.tests
 ^^^^^^^^^^^^^
 

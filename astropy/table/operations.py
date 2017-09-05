@@ -135,8 +135,8 @@ def setdiff(table1, table2, keys=None):
     Take a set difference of table rows.
 
     The row set difference will contain all rows in table1 that are not
-    present in table2. If the keys parameter is not defined, only the columns
-    shared by table1 and table2 will be in the output table.
+    present in table2. If the keys parameter is not defined, all columns in
+    table1 will be included in the output table.
 
     Parameters
     ----------
@@ -146,17 +146,17 @@ def setdiff(table1, table2, keys=None):
         table2 is on the right side of the set difference.
     keys : str or list of str
         Name(s) of column(s) used to match rows of left and right tables.
-        Default is to use all columns which are common to both tables.
+        Default is to use all columns in table1.
 
     Returns
     -------
-    diff_table : `~astropy.table.Table` object
+    diff_table : `~astropy.table.Table` object-
         New table containing the set difference between tables. If the set
         difference is none, an empty table will be returned.
 
     Examples
     --------
-    To get a set difference between two tables do::
+    To get a set difference between two tables::
 
       >>> from astropy.table import setdiff, Table
       >>> t1 = Table({'a': [1, 4, 9], 'b': ['c', 'd', 'f']}, names=('a', 'b'))

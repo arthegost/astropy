@@ -36,6 +36,9 @@ table from one or more input tables.  This includes:
    * - `Unique rows`_
      - Unique table rows by keys
      - `~astropy.table.unique`
+   * - `Set difference`_
+     - Set difference of two tables.
+     - `~astropy.table.setdiff`
 
 
 .. _grouped-operations:
@@ -934,3 +937,43 @@ Using multiple columns as ``keys``::
    M31 2012-02-14  16.9  17.3
    M82 2012-02-14  16.2  14.5
    M82 2012-03-26  15.7  16.5
+
+
+.. _set-difference:
+
+Set difference
+--------------
+
+A set difference will tell you the elements that are contained in one set but
+not in the other.  This concept can be applied to rows of a table by using the
+`~astropy.table.setdiff` function. You provide the function with two input
+tables and it will return all unique rows in the first table. If no unique
+rows are found, the `~astropy.table.setdiff` function will return an empty
+table.
+
+The table meta-data is merged with the `~astropy.table.join` function. To
+compare specific rows of the input tables you can use the ``keys`` parameter,
+which defines a list of column names.  If the ``keys`` parameter
+is undefined, only the columns in the first table are used. If ``keys`` is
+undefined and there are columns present in the first table that are not in the
+second table, an error will be thrown. Here's an example using the ``keys``
+parameter::
+
+  >>> from astropy.table import Table, setdiff
+  >>> cat_1 = Table.read("""name    obs_date    mag_b  mag_v
+  ...                       M31     2012-01-02  17.0   16.0
+  ...                       M82     2012-10-29  16.2   15.2
+  ...                       M101    2012-10-31  15.1   15.5""", format='ascii')
+  >>> cat_2 = Table.read("""   name    obs_date    logLx
+  ...                          NGC3516 2011-11-11  42.1
+  ...                          M31     2012-01-02  43.1
+  ...                          M82     2012-10-29  45.0""", format='ascii')
+  >>> sdiff = setdiff(cat_1, cat_2, keys=['name', 'obs_date'])
+  >>> print(sdiff)
+  name  obs_date
+  ---- ----------
+  M101 2012-10-31
+
+In this example there is a column in the first table that is not
+present in the second table, so the ``keys`` parameter must be used to specify
+the desired column names.
