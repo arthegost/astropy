@@ -134,19 +134,19 @@ def setdiff(table1, table2, keys=None):
     """
     Take a set difference of table rows.
 
-    The row set difference will contain all rows in table1 that are not
-    present in table2. If the keys parameter is not defined, all columns in
-    table1 will be included in the output table.
+    The row set difference will contain all rows in ``table1`` that are not
+    present in ``table2``. If the keys parameter is not defined, all columns in
+    ``table1`` will be included in the output table.
 
     Parameters
     ----------
     table1 : Table object
-        table1 is on the left side of the set difference.
+        ``table1`` is on the left side of the set difference.
     table2 : Table object
-        table2 is on the right side of the set difference.
+        ``table2`` is on the right side of the set difference.
     keys : str or list of str
         Name(s) of column(s) used to match rows of left and right tables.
-        Default is to use all columns in table1.
+        Default is to use all columns in ``table1``.
 
     Returns
     -------
@@ -185,18 +185,13 @@ def setdiff(table1, table2, keys=None):
     """
     if keys is None:
         keys = table1.colnames
-    else:
-        #Check that all keys are in table1
-        diff1 = np.setdiff1d(keys, table1.keys())
-        if len(diff1) != 0:
-            raise ValueError("The {} columns are missing from table1, cannot take "
-                             "a set difference.".format(diff1))
 
-    # Check that all keys are in table2
-    diff2 = np.setdiff1d(keys, table2.keys())
-    if len(diff2) != 0:
-        raise ValueError("The {} columns are missing from table2, cannot take "
-                         "a set difference.".format(diff2))
+    #Check that all keys are in table1 and table2
+    for tbl, tbl_str in ((table1,'table1'), (table2,'table2')):
+        diff_keys = np.setdiff1d(keys, tbl.colnames)
+        if len(diff_keys) != 0:
+            raise ValueError("The {} columns are missing from {}, cannot take "
+                             "a set difference.".format(diff_keys, tbl_str))
 
     # Make a light internal copy to avoid touching table2
     table2 = table2.copy(copy_data=False)
@@ -213,7 +208,7 @@ def setdiff(table1, table2, keys=None):
     else:
         t12_diff = t12[[]]
 
-    t12_diff.keep_columns(keys)
+    t12_diff.remove_column('__index__')
 
     return t12_diff
 

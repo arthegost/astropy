@@ -524,10 +524,10 @@ class TestSetdiff():
 
         assert type(out['a']) is type(self.t1['a'])
         assert type(out['b']) is type(self.t1['b'])
-        assert out.pformat() == [' a   b ',
-                                 '--- ---',
-                                 '  4 bar',
-                                 '  8 foo']
+        assert out.pformat() == [' a   b   d ',
+                                 '--- --- ---',
+                                 '  4 bar  R4',
+                                 '  8 foo  R2']
 
     def test_missing_key(self, operation_table_type):
         self._setup(operation_table_type)
