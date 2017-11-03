@@ -696,16 +696,16 @@ class TimeString(TimeUnique):
         components = ('year', 'mon', 'mday', 'hour', 'min', 'sec')
         defaults = (None, 1, 1, 0, 0, 0)
         # Assume that anything following "." on the right side is a
-        # floating fraction of a second.
+        # floating fraction of a second or day.
         try:
             idot = timestr.rindex('.')
         except Exception:
-            fracsec = 0.0
+            frac = 0.0
         else:
-            timestr, fracsec = timestr[:idot], timestr[idot:]
-            fracsec = float(fracsec)
+            timestr, frac = timestr[:idot], timestr[idot:]
+            frac = float(frac)
 
-        for _, strptime_fmt_or_regex, _ in subfmts:
+        for fmt, strptime_fmt_or_regex, _ in subfmts:
             if isinstance(strptime_fmt_or_regex, str):
                 try:
                     tm = time.strptime(timestr, strptime_fmt_or_regex)
@@ -724,8 +724,13 @@ class TimeString(TimeUnique):
                         in zip(components, defaults)]
 
             # Add fractional seconds
-            vals[-1] = vals[-1] + fracsec
-            return vals
+            if frac != 0.0:
+                if fmt in self._frac_sec_formats:
+                    vals[-1] = vals[-1] + frac
+                    frac = 0.0
+                elif fmt not in self._frac_day_formats:
+                    raise Exception('...')
+            return vals + [frac]
         else:
             raise ValueError('Time {0} does not match {1} format'
                              .format(timestr, self.name))
@@ -735,15 +740,17 @@ class TimeString(TimeUnique):
         # Select subformats based on current self.in_subfmt
         subfmts = self._select_subfmts(self.in_subfmt)
 
-        iterator = np.nditer([val1, None, None, None, None, None, None],
-                             op_dtypes=[val1.dtype] + 5*[np.intc] + [np.double])
+        iterator = np.nditer([val1, None, None, None, None, None, None, None],
+                             op_dtypes=[val1.dtype] + 5 * [np.intc] + 2 * [np.double])
 
-        for val, iy, im, id, ihr, imin, dsec in iterator:
-            iy[...], im[...], id[...], ihr[...], imin[...], dsec[...] = (
+        for val, iy, im, id, ihr, imin, dsec, dfrac in iterator:
+            iy[...], im[...], id[...], ihr[...], imin[...], dsec[...], dfrac[...] = (
                 self.parse_string(val.item(), subfmts))
 
-        self.jd1, self.jd2 = erfa.dtf2d(self.scale.upper().encode('ascii'),
-                                        *iterator.operands[1:])
+        jd1, jd2 = erfa.dtf2d(self.scale.upper().encode('ascii'),
+                              *iterator.operands[1:-1])
+        jd2 += iterator.operands[-1]
+        self.jd1, self.jd2 = day_frac(jd1, jd2)
 
     def str_kwargs(self):
         """
@@ -839,6 +846,8 @@ class TimeISO(TimeString):
                ('date',
                 '%Y-%m-%d',
                 '{year:d}-{mon:02d}-{day:02d}'))
+    _frac_day_formats = {'date'}
+    _frac_sec_formats = {'date_hms'}
 
     def parse_string(self, timestr, subfmts):
         # Handle trailing 'Z' for UTC time
